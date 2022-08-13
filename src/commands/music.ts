@@ -22,8 +22,8 @@ import {
   SlashOption,
 } from 'discordx'
 
-import { getNode } from './node.js'
-import { MusicQueue } from './queue.js'
+import { getNode } from '../utils/node.js'
+import { MusicQueue } from '../utils/queue.js'
 
 function wait(ms: number) {
   return new Promise((resolve) => {

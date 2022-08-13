@@ -8,15 +8,13 @@ export class Ping {
   @Slash('ping')
   ping(command: CommandInteraction | SimpleCommandMessage): void {
     command instanceof SimpleCommandMessage
-      ? command.message.reply(
-          `🏓Latency is ${
-            Date.now() - command.message.createdTimestamp
-          }ms. API Latency is ${Math.round(bot.ws.ping)}ms`
-        )
-      : command.reply(
-          `🏓Latency is ${
-            Date.now() - command.createdTimestamp
-          }ms. API Latency is ${Math.round(bot.ws.ping)}ms`
-        )
+      ? command.message.channel.send('Loading data').then (async (msg) =>{
+        msg.delete()
+        command.message.reply(`🏓Latency is ${msg.createdTimestamp - command.message.createdTimestamp}ms. API Latency is ${Math.round(bot.ws.ping)}ms`);
+      })
+      : command.channel?.send('Loading data').then (async (msg) =>{
+        msg.delete()
+        command.reply(`🏓Latency is ${msg.createdTimestamp - command.createdTimestamp}ms. API Latency is ${Math.round(bot.ws.ping)}ms`);
+      })
   }
 }

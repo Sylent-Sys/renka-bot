@@ -1,18 +1,18 @@
-import type { TrackResponse } from "@discordx/lava-player";
-import { LoadType, Status } from "@discordx/lava-player";
-import { Player } from "@discordx/lava-queue";
+import type { TrackResponse } from '@discordx/lava-player'
+import { LoadType, Status } from '@discordx/lava-player'
+import { Player } from '@discordx/lava-queue'
 import type {
   ButtonInteraction,
   CommandInteraction,
   Guild,
   TextBasedChannel,
-} from "discord.js";
+} from 'discord.js'
 import {
   ApplicationCommandOptionType,
   EmbedBuilder,
   GuildMember,
-} from "discord.js";
-import type { ArgsOf, Client } from "discordx";
+} from 'discord.js'
+import type { ArgsOf, Client } from 'discordx'
 import {
   ButtonComponent,
   Discord,
@@ -20,31 +20,31 @@ import {
   Slash,
   SlashChoice,
   SlashOption,
-} from "discordx";
+} from 'discordx'
 
-import { getNode } from "./node.js";
-import { MusicQueue } from "./queue.js";
+import { getNode } from './node.js'
+import { MusicQueue } from './queue.js'
 
 function wait(ms: number) {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(true), ms);
-  });
+    setTimeout(() => resolve(true), ms)
+  })
 }
 
 @Discord()
 export class MusicPlayer {
-  player: Record<string, Player> = {};
+  player: Record<string, Player> = {}
 
   // utils
 
   GetQueue(botId: string, guildId: string): MusicQueue | null {
-    const player = this.player[botId];
+    const player = this.player[botId]
     if (!player) {
-      return null;
+      return null
     }
 
-    const queue = new MusicQueue(player, guildId);
-    return player.queue(guildId, () => queue);
+    const queue = new MusicQueue(player, guildId)
+    return player.queue(guildId, () => queue)
   }
 
   async ParseCommand(
@@ -53,14 +53,14 @@ export class MusicPlayer {
     skipBotChannel = false
   ): Promise<
     | {
-        channel: TextBasedChannel;
-        guild: Guild;
-        member: GuildMember;
-        queue: MusicQueue;
+        channel: TextBasedChannel
+        guild: Guild
+        member: GuildMember
+        queue: MusicQueue
       }
     | undefined
   > {
-    await interaction.deferReply();
+    await interaction.deferReply()
 
     if (
       !interaction.channel ||
@@ -69,38 +69,38 @@ export class MusicPlayer {
       !interaction.client.user
     ) {
       interaction.followUp(
-        "The command could not be processed. Please try again"
-      );
-      return;
+        'The command could not be processed. Please try again'
+      )
+      return
     }
 
     if (!interaction.member.voice.channelId) {
-      interaction.followUp("Join a voice channel first");
-      return;
+      interaction.followUp('Join a voice channel first')
+      return
     }
 
     const bot = interaction.guild?.members.cache.get(
       interaction.client.user?.id
-    );
+    )
 
     if (!bot) {
-      interaction.followUp("Having difficulty finding my place in this world");
-      return;
+      interaction.followUp('Having difficulty finding my place in this world')
+      return
     }
 
     if (
       !skipBotChannel &&
       interaction.member.voice.channelId !== bot.voice.channelId
     ) {
-      interaction.followUp("join to my voice channel");
-      return;
+      interaction.followUp('join to my voice channel')
+      return
     }
 
-    const queue = this.GetQueue(client.botId, interaction.guild.id);
+    const queue = this.GetQueue(client.botId, interaction.guild.id)
 
     if (!queue) {
-      interaction.followUp("The player is not ready yet, please wait");
-      return;
+      interaction.followUp('The player is not ready yet, please wait')
+      return
     }
 
     return {
@@ -108,265 +108,265 @@ export class MusicPlayer {
       guild: interaction.guild,
       member: interaction.member,
       queue,
-    };
+    }
   }
 
   // events
 
-  @Once("ready")
-  async onReady([]: ArgsOf<"ready">, client: Client): Promise<void> {
-    await wait(5e3);
-    this.player[client.botId] = new Player(getNode(client));
+  @Once('ready')
+  async onReady([]: ArgsOf<'ready'>, client: Client): Promise<void> {
+    await wait(5e3)
+    this.player[client.botId] = new Player(getNode(client))
   }
 
   // slashes
 
   @Slash()
   async play(
-    @SlashChoice("URL", "SEARCH")
-    @SlashOption("type", { type: ApplicationCommandOptionType.String })
-    type: "URL" | "SEARCH",
-    @SlashOption("input", { type: ApplicationCommandOptionType.String })
+    @SlashChoice('URL', 'SEARCH')
+    @SlashOption('type', { type: ApplicationCommandOptionType.String })
+    type: 'URL' | 'SEARCH',
+    @SlashOption('input', { type: ApplicationCommandOptionType.String })
     input: string,
     interaction: CommandInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction, true);
+    const cmd = await this.ParseCommand(client, interaction, true)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue, member, channel } = cmd;
+    const { queue, member, channel } = cmd
 
-    let response: TrackResponse;
+    let response: TrackResponse
 
-    if (type === "URL") {
-      response = await queue.enqueue(input);
+    if (type === 'URL') {
+      response = await queue.enqueue(input)
     } else {
-      const searchResponse = await queue.search(input);
-      const track = searchResponse.tracks[0];
+      const searchResponse = await queue.search(input)
+      const track = searchResponse.tracks[0]
       if (!track) {
-        interaction.followUp("> no search result");
-        return;
+        interaction.followUp('> no search result')
+        return
       }
 
-      queue.tracks.push(track);
+      queue.tracks.push(track)
       response = {
         loadType: LoadType.TRACK_LOADED,
         playlistInfo: {},
         tracks: [track],
-      };
+      }
     }
 
     await queue.lavaPlayer.join(member.voice.channelId, {
       deaf: true,
-    });
+    })
 
-    queue.channel = channel;
+    queue.channel = channel
 
     if (
       queue.lavaPlayer.status === Status.INSTANTIATED ||
       queue.lavaPlayer.status === Status.UNKNOWN ||
       queue.lavaPlayer.status === Status.ENDED
     ) {
-      queue.playNext();
+      queue.playNext()
     }
 
-    const embed = new EmbedBuilder();
-    embed.setTitle("Enqueued");
+    const embed = new EmbedBuilder()
+    embed.setTitle('Enqueued')
     if (response.playlistInfo.name) {
       embed.setDescription(
         `Enqueued song ${response.tracks.length} from ${response.playlistInfo.name}`
-      );
+      )
     } else if (response.tracks.length === 1) {
       embed.setDescription(
         `Enqueued [${response.tracks[0]?.info.title}](<${response.tracks[0]?.info.uri}>)`
-      );
+      )
     } else {
-      embed.setDescription(`Enqueued ${response.tracks.length} tracks`);
+      embed.setDescription(`Enqueued ${response.tracks.length} tracks`)
     }
 
-    interaction.followUp({ embeds: [embed] });
-    return;
+    interaction.followUp({ embeds: [embed] })
+    return
   }
 
   @Slash()
   async seek(
-    @SlashOption("seconds") seconds: number,
+    @SlashOption('seconds') seconds: number,
     interaction: CommandInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
     if (!queue.currentTrack) {
-      interaction.followUp("> I am not sure, I am playing anything");
-      return;
+      interaction.followUp('> I am not sure, I am playing anything')
+      return
     }
 
     if (seconds * 1000 > queue.currentTrack.info.length) {
-      queue.playNext();
-      interaction.followUp("> skipped the track instead");
-      return;
+      queue.playNext()
+      interaction.followUp('> skipped the track instead')
+      return
     }
 
-    queue.lavaPlayer.play(queue.currentTrack, { start: seconds * 1000 });
+    queue.lavaPlayer.play(queue.currentTrack, { start: seconds * 1000 })
 
-    interaction.followUp("> current track seeked");
-    return;
+    interaction.followUp('> current track seeked')
+    return
   }
 
   // buttons
 
-  @ButtonComponent("btn-next")
+  @ButtonComponent('btn-next')
   async nextControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.playNext();
-    queue.updateControlMessage();
+    queue.playNext()
+    queue.updateControlMessage()
 
     // delete interaction
-    interaction.deleteReply();
+    interaction.deleteReply()
   }
 
-  @ButtonComponent("btn-pause")
+  @ButtonComponent('btn-pause')
   async pauseControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.isPlaying ? queue.pause() : queue.resume();
-    queue.updateControlMessage();
+    queue.isPlaying ? queue.pause() : queue.resume()
+    queue.updateControlMessage()
 
     // delete interaction
-    interaction.deleteReply();
+    interaction.deleteReply()
   }
 
-  @ButtonComponent("btn-leave")
+  @ButtonComponent('btn-leave')
   async leaveControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.stop();
-    await queue.lavaPlayer.leave();
-    queue.updateControlMessage();
+    queue.stop()
+    await queue.lavaPlayer.leave()
+    queue.updateControlMessage()
 
     // delete interaction
-    interaction.deleteReply();
+    interaction.deleteReply()
   }
 
-  @ButtonComponent("btn-repeat")
+  @ButtonComponent('btn-repeat')
   async repeatControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.setRepeat(!queue.repeat);
-    queue.updateControlMessage();
+    queue.setRepeat(!queue.repeat)
+    queue.updateControlMessage()
 
     // delete interaction
-    interaction.deleteReply();
+    interaction.deleteReply()
   }
 
-  @ButtonComponent("btn-loop")
+  @ButtonComponent('btn-loop')
   async loopControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.setLoop(!queue.loop);
-    queue.updateControlMessage();
+    queue.setLoop(!queue.loop)
+    queue.updateControlMessage()
 
     // delete interaction
-    interaction.deleteReply();
+    interaction.deleteReply()
   }
 
-  @ButtonComponent("btn-queue")
+  @ButtonComponent('btn-queue')
   async queueControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.view(interaction as unknown as CommandInteraction);
+    queue.view(interaction as unknown as CommandInteraction)
   }
 
-  @ButtonComponent("btn-mix")
+  @ButtonComponent('btn-mix')
   async mixControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.shuffle();
-    queue.updateControlMessage();
+    queue.shuffle()
+    queue.updateControlMessage()
 
     // delete interaction
-    await interaction.deleteReply();
+    await interaction.deleteReply()
   }
 
-  @ButtonComponent("btn-controls")
+  @ButtonComponent('btn-controls')
   async controlsControl(
     interaction: ButtonInteraction,
     client: Client
   ): Promise<void> {
-    const cmd = await this.ParseCommand(client, interaction);
+    const cmd = await this.ParseCommand(client, interaction)
     if (!cmd) {
-      return;
+      return
     }
 
-    const { queue } = cmd;
+    const { queue } = cmd
 
-    queue.updateControlMessage({ force: true });
+    queue.updateControlMessage({ force: true })
 
     // delete interaction
-    interaction.deleteReply();
+    interaction.deleteReply()
   }
 }

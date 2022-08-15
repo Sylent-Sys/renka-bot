@@ -95,6 +95,7 @@ export default class Search {
   }
   @SimpleCommand('search_by_image')
   async searchByImage(command: SimpleCommandMessage): Promise<void> {
+    if (command.message.attachments.at(0)?.url == null) return
     const dataTraceMoe = await (
       await axios.get(
         `${process.env.TRACE_MOE_API}/search?url=${encodeURI(

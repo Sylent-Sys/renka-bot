@@ -99,13 +99,22 @@ export default class Search {
     @SimpleCommandOption('url') url: string,
     command: SimpleCommandMessage
   ) {
-    if (tipe.toLowerCase() === 'url' && url === '') return command.message.reply('url tidak boleh kosong')
-    if (tipe.toLowerCase() === 'file' && command.message.attachments.at(0)?.url == null) return command.message.reply('mohon lampirkan gambar')
+    if (tipe.toLowerCase() === 'url' && url === '')
+      return command.message.reply('url tidak boleh kosong')
+    if (
+      tipe.toLowerCase() === 'file' &&
+      command.message.attachments.at(0)?.url == null
+    )
+      return command.message.reply('mohon lampirkan gambar')
     try {
       const dataTraceMoe = await (
         await axios.get(
           `${process.env.TRACE_MOE_API}/search?url=${encodeURI(
-            String(tipe.toLowerCase() === 'url' ? url : command.message.attachments.at(0)?.url)
+            String(
+              tipe.toLowerCase() === 'url'
+                ? url
+                : command.message.attachments.at(0)?.url
+            )
           )}`
         )
       ).data

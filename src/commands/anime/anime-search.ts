@@ -94,49 +94,58 @@ export default class Search {
     this.SearchByName(nama, command)
   }
   @SimpleCommand('search_by_image')
-  async searchByImage(command: SimpleCommandMessage): Promise<void> {
-    if (command.message.attachments.at(0)?.url == null) return
-    const dataTraceMoe = await (
-      await axios.get(
-        `${process.env.TRACE_MOE_API}/search?url=${encodeURI(
-          String(command.message.attachments.at(0)?.url)
-        )}`
+  async searchByImage(
+    @SimpleCommandOption('tipe') tipe: string,
+    @SimpleCommandOption('url') url: string,
+    command: SimpleCommandMessage
+  ) {
+    if (tipe.toLowerCase() === 'url' && url === '') return command.message.reply('url tidak boleh kosong')
+    if (tipe.toLowerCase() === 'file' && command.message.attachments.at(0)?.url == null) return command.message.reply('mohon lampirkan gambar')
+    try {
+      const dataTraceMoe = await (
+        await axios.get(
+          `${process.env.TRACE_MOE_API}/search?url=${encodeURI(
+            String(tipe.toLowerCase() === 'url' ? url : command.message.attachments.at(0)?.url)
+          )}`
+        )
+      ).data
+      if (dataTraceMoe.result[0].similarity < 0.85) {
+        return command.message.reply('Anime not found')
+      }
+      const dataAnilist = await new Anilist().media.anime(
+        dataTraceMoe.result[0].anilist
       )
-    ).data
-    const dataAnilist = await new Anilist().media.anime(
-      dataTraceMoe.result[0].anilist
-    )
-    console.log({ dataTraceMoe, dataAnilist })
-    if (dataTraceMoe.result[0].similarity < 0.85) {
-      command.message.reply('Anime not found')
+      console.log({ dataTraceMoe, dataAnilist })
+      const embed = new EmbedBuilder()
+        .setColor(0x0099ff)
+        .setTitle(dataAnilist.title.romaji)
+        .setURL(dataAnilist.siteUrl)
+        .setDescription(this.htmlToString(dataAnilist.description))
+        .setThumbnail(dataAnilist.coverImage.medium)
+        .addFields(
+          {
+            name: 'Episodes',
+            value: String(dataAnilist.episodes),
+            inline: true,
+          },
+          {
+            name: 'Status',
+            value: dataAnilist.status,
+            inline: true,
+          },
+          {
+            name: 'Genres',
+            value: dataAnilist.genres.join(', '),
+            inline: true,
+          }
+        )
+      command.message.reply({
+        embeds: [embed],
+        files: [dataTraceMoe.result[0].video],
+      })
+    } catch (error) {
+      command.message.reply('kesalahan dari sisi user')
     }
-    const embed = new EmbedBuilder()
-      .setColor(0x0099ff)
-      .setTitle(dataAnilist.title.romaji)
-      .setURL(dataAnilist.siteUrl)
-      .setDescription(this.htmlToString(dataAnilist.description))
-      .setThumbnail(dataAnilist.coverImage.medium)
-      .addFields(
-        {
-          name: 'Episodes',
-          value: String(dataAnilist.episodes),
-          inline: true,
-        },
-        {
-          name: 'Status',
-          value: dataAnilist.status,
-          inline: true,
-        },
-        {
-          name: 'Genres',
-          value: dataAnilist.genres.join(', '),
-          inline: true,
-        }
-      )
-    command.message.reply({
-      embeds: [embed],
-      files: [dataTraceMoe.result[0].video],
-    })
   }
 
   htmlToString(returnText: string) {

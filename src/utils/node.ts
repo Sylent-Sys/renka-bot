@@ -9,7 +9,7 @@ export function getNode(client: Client): Node {
       address: process.env.LAVA_HOST ?? 'localhost',
       connectionOptions: { resumeKey: client.botId, resumeTimeout: 15 },
       port: process.env.LAVA_PORT ? Number(process.env.LAVA_PORT) : 2333,
-      secure: (process.env.LAVA_SECURE as boolean | undefined) ?? false,
+      secure: String(process.env.LAVA_SECURE) === 'true' ? true : false,
     },
 
     password: process.env.LAVA_PASSWORD ?? '',

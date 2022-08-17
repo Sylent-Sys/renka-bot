@@ -14,7 +14,7 @@ import { decode } from 'html-entities'
 import { Message } from '../../utils/message.js'
 
 @Discord()
-@SlashGroup({ name: 'anime', description: 'commands related to anime' })
+@SlashGroup({ name: 'anime', description: 'Commands related to anime' })
 @SlashGroup('anime')
 export default class Search {
   async SearchByName(
@@ -80,14 +80,14 @@ export default class Search {
       console.error(error)
     }
   }
-  @Slash({ name: 'search_by_name' })
+  @Slash({ name: 'anime_search_by_name' })
   searchByNameSlash(
     @SlashOption({ name: 'nama_anime' }) nama: string,
     command: CommandInteraction
   ) {
     this.SearchByName(nama, command)
   }
-  @SimpleCommand({ name: 'search_by_name' })
+  @SimpleCommand({ name: 'anime_search_by_name' })
   searchByNameSimpleCommand(
     @SimpleCommandOption({ name: 'nama_anime' }) nama: string,
     command: SimpleCommandMessage

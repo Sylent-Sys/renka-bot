@@ -12,7 +12,7 @@ import {
   EmbedBuilder,
   GuildMember,
 } from 'discord.js'
-import type { ArgsOf, Client } from 'discordx'
+import { ArgsOf, Client, SlashGroup } from 'discordx'
 import {
   ButtonComponent,
   Discord,
@@ -32,6 +32,8 @@ function wait(ms: number) {
 }
 
 @Discord()
+@SlashGroup({ name: 'music', description: 'commands related to music' })
+@SlashGroup('music')
 export class MusicPlayer {
   player: Record<string, Player> = {}
 
@@ -121,7 +123,7 @@ export class MusicPlayer {
 
   // slashes
 
-  @Slash()
+  @Slash({ name: 'play', description: 'play the music' })
   async play(
     @SlashChoice('URL', 'SEARCH')
     @SlashOption({ name: 'type', type: ApplicationCommandOptionType.String })
@@ -190,8 +192,8 @@ export class MusicPlayer {
     return
   }
 
-  @Slash()
-  async seek(
+  @Slash({ name: 'next', description: 'skip to next song' })
+  async next(
     @SlashOption({ name: 'seconds' }) seconds: number,
     interaction: CommandInteraction,
     client: Client

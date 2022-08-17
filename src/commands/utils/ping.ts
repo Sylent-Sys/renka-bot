@@ -1,8 +1,16 @@
 import type { CommandInteraction } from 'discord.js'
-import { Discord, SimpleCommand, SimpleCommandMessage, Slash } from 'discordx'
-import { bot } from '../main.js'
+import {
+  Discord,
+  SimpleCommand,
+  SimpleCommandMessage,
+  Slash,
+  SlashGroup,
+} from 'discordx'
+import { bot } from '../../main.js'
 
 @Discord()
+@SlashGroup({ name: 'utils', description: 'Utility commands' })
+@SlashGroup('utils')
 export class Ping {
   @SimpleCommand({ name: 'ping' })
   @Slash({ name: 'ping' })

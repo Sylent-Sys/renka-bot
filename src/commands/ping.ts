@@ -4,8 +4,8 @@ import { bot } from '../main.js'
 
 @Discord()
 export class Ping {
-  @SimpleCommand('ping')
-  @Slash('ping')
+  @SimpleCommand({ name: 'ping' })
+  @Slash({ name: 'ping' })
   ping(command: CommandInteraction | SimpleCommandMessage): void {
     command instanceof SimpleCommandMessage
       ? command.message.channel.send('Loading data').then(async (msg) => {

@@ -11,6 +11,7 @@ import {
 } from 'discordx'
 import Anilist from 'anilist-node'
 import { decode } from 'html-entities'
+import { Message } from '../../utils/message.js'
 
 @Discord()
 @SlashGroup({ name: 'anime', description: 'commands related to anime' })
@@ -20,6 +21,8 @@ export default class Search {
     query: string,
     command: CommandInteraction | SimpleCommandMessage
   ) {
+    if (query === '' || query === undefined || query === null)
+      return Message.sendReply(command, 'Nama tidak boleh kosong')
     const url = `${process.env.MAL_API}/anime?q=${encodeURI(query)}`
     try {
       const dataMal = await (
@@ -72,31 +75,30 @@ export default class Search {
             inline: true,
           }
         )
-      command instanceof SimpleCommandMessage
-        ? command.message.reply({ embeds: [embed] })
-        : command.reply({ embeds: [embed] })
+      Message.sendReply(command, { embeds: [embed] })
     } catch (error) {
       console.error(error)
     }
   }
-  @Slash('search_by_name')
+  @Slash({ name: 'search_by_name' })
   searchByNameSlash(
-    @SlashOption('nama_anime') nama: string,
+    @SlashOption({ name: 'nama_anime' }) nama: string,
     command: CommandInteraction
   ) {
     this.SearchByName(nama, command)
   }
-  @SimpleCommand('search_by_name')
+  @SimpleCommand({ name: 'search_by_name' })
   searchByNameSimpleCommand(
-    @SimpleCommandOption('nama_anime') nama: string,
+    @SimpleCommandOption({ name: 'nama_anime' }) nama: string,
     command: SimpleCommandMessage
   ) {
+    nama = command.argString
     this.SearchByName(nama, command)
   }
-  @SimpleCommand('search_by_image')
+  @SimpleCommand({ name: 'search_by_image' })
   async searchByImage(
-    @SimpleCommandOption('tipe') tipe: string,
-    @SimpleCommandOption('url') url: string,
+    @SimpleCommandOption({ name: 'tipe' }) tipe: string,
+    @SimpleCommandOption({ name: 'url' }) url: string,
     command: SimpleCommandMessage
   ) {
     if (tipe.toLowerCase() === 'url' && url === '')
@@ -148,7 +150,7 @@ export default class Search {
             inline: true,
           }
         )
-      command.message.reply({
+      Message.sendReply(command, {
         embeds: [embed],
         files: [dataTraceMoe.result[0].video],
       })

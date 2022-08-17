@@ -25,15 +25,15 @@
     "@discordx/pagination": "^3.0.0",
     "anilist-node": "^1.12.1",
     "axios": "^0.27.2",
-    "discord.js": "^14.0.2",
-    "discordx": "^11.0.8",
+    "discord.js": "^14.2.0",
+    "discordx": "^11.1.0",
     "dotenv": "^16.0.1",
     "html-entities": "^2.3.3",
     "husky": "^8.0.1",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@types/node": "^18.7.2",
+    "@types/node": "^18.7.5",
     "@typescript-eslint/eslint-plugin": "5.33.0",
     "@typescript-eslint/parser": "5.33.0",
     "eslint": "8.21.0",

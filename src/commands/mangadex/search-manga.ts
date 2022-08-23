@@ -16,13 +16,12 @@ import { Message } from '../../utils/message.js'
 @SlashGroup({ name: 'mangadex', description: 'Commands related to mangadex' })
 @SlashGroup('mangadex')
 export default class Search {
-  constructor(private readonly messageUtils: Message) {}
   async searchByName(
     query: string,
     command: CommandInteraction | SimpleCommandMessage
   ) {
     if (query === '' || query === undefined || query === null)
-      return this.messageUtils.sendReply(command, 'Nama tidak boleh kosong')
+      return Message.sendReply(command, 'Nama tidak boleh kosong')
     const dataMangadex = await (
       await axios.get(
         `${process.env.MANGADEX_API}/manga?title=${encodeURI(query)}`
@@ -30,7 +29,7 @@ export default class Search {
     ).data
     console.log(dataMangadex)
     if (dataMangadex.length === 0)
-      return this.messageUtils.sendReply(command, 'Data tidak ditemukan')
+      return Message.sendReply(command, 'Data tidak ditemukan')
     const pages = dataMangadex.data.map((manga: any, index: number) => {
       return new EmbedBuilder()
         .setColor(0x0099ff)

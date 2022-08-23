@@ -2,7 +2,7 @@ import { CommandInteraction } from 'discord.js'
 import { SimpleCommandMessage } from 'discordx'
 import { SIMPLE_COMMAND_OPTIONS, COMMAND_INTERACTION_OPTIONS } from './types.js'
 export class Message {
-  static sendReply(
+  sendReply(
     command: CommandInteraction | SimpleCommandMessage,
     content: SIMPLE_COMMAND_OPTIONS | COMMAND_INTERACTION_OPTIONS
   ) {

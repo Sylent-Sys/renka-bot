@@ -17,12 +17,13 @@ import { Message } from '../../utils/message.js'
 @SlashGroup({ name: 'anime', description: 'Commands related to anime' })
 @SlashGroup('anime')
 export default class Search {
+  constructor(private readonly messageUtils: Message) {}
   async SearchByName(
     query: string,
     command: CommandInteraction | SimpleCommandMessage
   ) {
     if (query === '' || query === undefined || query === null)
-      return Message.sendReply(command, 'Nama tidak boleh kosong')
+      return this.messageUtils.sendReply(command, 'Nama tidak boleh kosong')
     const url = `${process.env.MAL_API}/anime?q=${encodeURI(query)}`
     try {
       const dataMal = await (
@@ -75,7 +76,7 @@ export default class Search {
             inline: true,
           }
         )
-      Message.sendReply(command, { embeds: [embed] })
+      this.messageUtils.sendReply(command, { embeds: [embed] })
     } catch (error) {
       console.error(error)
     }
@@ -150,7 +151,7 @@ export default class Search {
             inline: true,
           }
         )
-      Message.sendReply(command, {
+      this.messageUtils.sendReply(command, {
         embeds: [embed],
         files: [dataTraceMoe.result[0].video],
       })
